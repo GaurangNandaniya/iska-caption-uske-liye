@@ -36,7 +36,7 @@ export function createImageResponse({ username, caption, imageId }) {
     return { error: "Invalid caption" };
   }
 
-  if (!imageId) {
+  if (imageId == undefined) {
     return { error: "Invalid imageId" };
   }
 
@@ -56,7 +56,7 @@ export function createImageResponse({ username, caption, imageId }) {
 export function getImageResponses({ id }) {
   using db = getDB();
   using query = db.query(
-    `select * from image_response as ir where ir.id = $id;`,
+    `select * from image_response as ir where ir.fk_image_id = $id;`,
   );
 
   return query.all({ $id: id });

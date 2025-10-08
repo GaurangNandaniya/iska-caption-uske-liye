@@ -142,6 +142,25 @@ Bun.serve({
         return createJsonResponse({ status: "ok" });
       },
     },
+    "/photo/previous": {
+      POST: async () => {
+        const imageCount = getImageCount();
+
+        if (imageCount < 1) {
+          return createJsonResponse({
+            status: "error",
+            message: "No images to show",
+          });
+        }
+
+        currentState.currentImageNumber -= 1;
+        currentState.currentImageNumber =
+          (currentState.currentImageNumber + imageCount) % imageCount;
+
+        sendRefetchSignal();
+        return createJsonResponse({ status: "ok" });
+      },
+    },
 
     // Response handling
     "/photo/response/create": {
