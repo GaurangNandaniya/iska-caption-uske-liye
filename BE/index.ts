@@ -21,7 +21,6 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
 };
 
 function createJsonResponse(body: any) {
@@ -30,6 +29,12 @@ function createJsonResponse(body: any) {
       "content-type": "application/json",
       ...CORS_HEADERS,
     },
+  });
+}
+
+function createFileResponse(fileBuffer: any) {
+  return new Response(fileBuffer, {
+    headers: CORS_HEADERS,
   });
 }
 
@@ -90,7 +95,7 @@ Bun.serve({
       GET: async (req: any) => {
         const filePath = "./" + new URL(req.url).pathname;
         const file = Bun.file(filePath);
-        return new Response(file);
+        return createFileResponse(file);
       },
     },
 
@@ -108,7 +113,7 @@ Bun.serve({
         const filePath = "./" + result.image_path;
         const file = Bun.file(filePath);
 
-        return new Response(file);
+        return createFileResponse(file);
       },
     },
     "/photo/:id/responses": {
