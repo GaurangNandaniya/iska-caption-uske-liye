@@ -4,6 +4,7 @@ import {
   getImage,
   getImageCount,
   createImageResponse,
+  getAllImageResponses,
 } from "./model.ts";
 
 type WebSocketData = {
@@ -109,6 +110,14 @@ Bun.serve({
       POST: async (req) => {
         const body = await req.json();
         const result = createImageResponse(body);
+
+        return createResponse(result);
+      },
+    },
+
+    "/responses": {
+      GET: async (req) => {
+        const result = getAllImageResponses();
 
         return createResponse(result);
       },
