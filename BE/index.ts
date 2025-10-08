@@ -1,13 +1,45 @@
 import type { ServerWebSocket } from "bun";
 import { createUser } from "./model.ts";
+import { IMAGE_FOLDER_PATH } from "./constants.ts";
 
 type WebSocketData = {
   id: string;
 };
 
+const imageNames = [
+  "001.png",
+  "002.png",
+  "003.png",
+  "004.png",
+  "005.png",
+  "006.png",
+  "007.png",
+  "008.png",
+  "009.png",
+  "010.png",
+  "011.png",
+  "012.png",
+  "013.png",
+  "014.png",
+  "015.png",
+  "016.png",
+  "017.png",
+  "018.png",
+  "019.png",
+  "020.png",
+  "021.png",
+  "022.png",
+  "023.png",
+  "024.png",
+  "025.png",
+  "026.png",
+  "027.png",
+];
+
 const currentState = {
   wsRefs: [],
   mode: "ASK",
+  currentImageNumber: 0,
 };
 
 const getHandlers = {
@@ -61,6 +93,17 @@ Bun.serve({
       POST: async (req) => {
         const body = await req.json();
         return createResponse(await createUser(body));
+      },
+    },
+
+    // Image handling
+    "/photo/current.png": {
+      GET: async (req) => {
+        const filePath =
+          IMAGE_FOLDER_PATH + imageNames[currentState.currentImageNumber];
+
+        const file = Bun.file(filePath);
+        return new Response(file);
       },
     },
   },
