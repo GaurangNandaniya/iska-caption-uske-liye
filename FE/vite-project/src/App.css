@@ -44,3 +44,16 @@
   display: flex;
   column-gap: 8px;
 }
+
+.response-item {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  width: max-content;
+}
+
+/* Animation of revealed responses */
+.revealed {
+  transition: all 5s ease-in-out;
+}
