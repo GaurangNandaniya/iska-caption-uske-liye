@@ -1,65 +1,81 @@
 import type { ServerWebSocket } from "bun";
+import { createUser } from "./model.ts";
 
 type WebSocketData = {
   id: string;
 };
 
+const currentState = {
+  wsRefs: [],
+  mode: "ASK",
+};
+
+const getHandlers = {
+  "/mode/get": (req) => {
+    return Response("hello");
+  },
+};
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400",
+};
+
+function createResponse(body, contentType) {
+  return new Response(JSON.stringify(body), {
+    headers: {
+      "content-type": "application/json",
+      ...CORS_HEADERS,
+    },
+  });
+}
+
 Bun.serve({
-  hostname: "0.0.0.0",
-
   port: 3001,
-  // `routes` requires Bun v1.2.3+
+  hostname: "0.0.0.0",
   routes: {
-    // Dynamic routes
-    "/viewer": (req) => {
-      // return static html
-      return new Response(`Hello User ${req.params.id}!`);
-    },
-    "/admin": (req) => {
-      // return static html
-      return new Response(`Hello User ${req.params.id}!`);
-    },
-    "/": (req) => {
-      // return static html
-      return new Response(`Hello User ${req.params.id}!`);
-    },
-
-    // Per-HTTP method handlers
-    "/mode": {
-      GET: () => new Response("List posts"),
-      POST: async (req) => {
-        const body = await req.json();
-        return Response.json({ created: true, ...body });
-      },
-    },
-    "/user": {
+    // Mode handling
+    "/mode/get": {
       GET: () => {
-        // get current user
-        return new Response("List posts");
+        return Response.json({ mode: currentState.mode });
       },
+    },
+    "/mode/update": {
       POST: async (req) => {
         const body = await req.json();
-        return Response.json({ created: true, ...body });
+
+        currentState.wsRefs.forEach((ws) => {
+          ws.send(JSON.stringify({ type: "MODE_UPDATE", value: body.mode }));
+        });
+
+        currentState.mode = body.mode;
+
+        return new createResponse(body);
       },
     },
 
-    // Wildcard route for all routes that start with "/api/" and aren't otherwise matched
-    "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
-
-    // Redirect from /blog/hello to /blog/hello/world
-    "/blog/hello": Response.redirect("/blog/hello/world"),
+    // User handling
+    "/user/create": {
+      POST: async (req) => {
+        const body = await req.json();
+        return createResponse(await createUser(body));
+      },
+    },
   },
 
   websocket: {
     // Fired when the connection is successfully opened
     open(ws: ServerWebSocket<WebSocketData>) {
+      currentState.wsRefs.push(ws);
       console.log("Connected!");
       ws.send(JSON.stringify({ status: "connected" }));
     },
 
     message(ws: ServerWebSocket<WebSocketData>, message: string | Buffer) {
       console.log(`[WS] Received: ${message}`);
-      ws.send(JSON.stringify({ message }));
+      ws.send(JSON.stringify({ type: "REFETCH" }));
     },
 
     // Fired when the connection closes
@@ -70,6 +86,10 @@ Bun.serve({
 
   fetch(req, server) {
     const url = new URL(req.url);
+
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
 
     if (url.pathname === "/ws") {
       // 2. We have the 'server' object here, so we can call upgrade
@@ -82,7 +102,6 @@ Bun.serve({
       return new Response("Upgrade failed", { status: 400 });
     }
 
-    // Fallback for non-websocket traffic
-    return new Response("Not a websocket request.");
+    return new Response("Invalid request");
   },
 });
