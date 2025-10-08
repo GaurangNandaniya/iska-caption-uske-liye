@@ -41,8 +41,8 @@ function App() {
       if (message.type === "MODE_UPDATE") {
         setMode(message.value);
       }
-      if (message.type === "REVEAL_RESPONSE") {
-        setRevealedResponsesIds((prev) => [...prev, message.value]);
+      if (message.type === "NEXT_RESPONSE") {
+        setRevealedResponsesIds((prev) => [...prev, message?.value.responseId]);
       }
     };
 
@@ -161,6 +161,7 @@ function App() {
           customRef={revealModeRef}
           isSocketConnected={isSocketConnected}
           revealedResponsesIds={revealedResponsesIds}
+          isAdmin={isAdmin}
         />
       ) : null}
     </div>

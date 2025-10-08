@@ -51,6 +51,8 @@
   padding: 8px;
   margin-bottom: 8px;
   width: max-content;
+  display: flex;
+  column-gap: 8px;
 }
 
 /* Animation of revealed responses */

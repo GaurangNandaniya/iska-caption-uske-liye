@@ -2,7 +2,7 @@ import { useState } from "react";
 import { API_URL } from "../constants";
 
 const RevealModeComp = (props) => {
-  const { isSocketConnected, customRef, revealedResponsesIds } = props;
+  const { isSocketConnected, customRef, revealedResponsesIds, isAdmin } = props;
   const [currentPhoto, setCurrentPhoto] = useState(null);
   const [allResponses, setAllResponses] = useState([
     { id: 1, responseText: "Test response", username: "Test user" },
@@ -27,6 +27,18 @@ const RevealModeComp = (props) => {
     getCurrentPhoto: getCurrentPhoto,
   };
 
+  const revealName = async ({ responseId }) => {
+    await fetch(`${API_URL}/response/next`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        responseId: responseId,
+      }),
+    });
+  };
+
   return (
     <div className="ask-mode-container">
       {currentPhoto?.image_path ? (
@@ -48,12 +60,23 @@ const RevealModeComp = (props) => {
       <div className="responses-list-container">
         {allResponses.map((response) => (
           <div className="response-item" key={response.id}>
-            {response.responseText}{" "}
+            {response.caption}{" "}
             {revealedResponsesIds.includes(response.id) ? (
-              <span className="revealed">({response.username})</span>
+              <span className="revealed">({response.created_by_username})</span>
             ) : (
               ""
             )}
+            {isAdmin ? (
+              <button
+                onClick={() => {
+                  revealName({
+                    responseId: response.id,
+                  });
+                }}
+              >
+                Reveal
+              </button>
+            ) : null}
           </div>
         ))}
       </div>
