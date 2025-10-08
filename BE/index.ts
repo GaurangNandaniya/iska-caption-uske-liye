@@ -58,7 +58,7 @@ Bun.serve({
     // Mode handling
     "/mode/get": {
       GET: () => {
-        return Response.json({ mode: currentState.mode });
+        return createJsonResponse({ mode: currentState.mode });
       },
     },
     "/mode/update": {
