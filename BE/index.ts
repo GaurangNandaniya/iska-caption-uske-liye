@@ -1,5 +1,10 @@
 import type { ServerWebSocket } from "bun";
-import { createUser, getImage, getImageCount } from "./model.ts";
+import {
+  createUser,
+  getImage,
+  getImageCount,
+  createImageResponse,
+} from "./model.ts";
 
 type WebSocketData = {
   id: string;
@@ -98,9 +103,14 @@ Bun.serve({
         return createResponse({ status: "ok" });
       },
     },
+
+    // Response handling
     "/photo/response/create": {
       POST: async (req) => {
         const body = await req.json();
+        const result = createImageResponse(body);
+
+        return createResponse(result);
       },
     },
   },

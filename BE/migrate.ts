@@ -50,7 +50,7 @@ const imageNames = [
       create table if not exists image_response (
         id integer primary key autoincrement,
         fk_image_id integer not null,
-        response_text text,
+        caption text,
         created_by_username text,
 
         foreign key (fk_image_id) references image(id)
