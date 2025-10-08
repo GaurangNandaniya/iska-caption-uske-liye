@@ -1,40 +1,9 @@
 import type { ServerWebSocket } from "bun";
-import { createUser } from "./model.ts";
-import { IMAGE_FOLDER_PATH } from "./constants.ts";
+import { createUser, getImage, getImageCount } from "./model.ts";
 
 type WebSocketData = {
   id: string;
 };
-
-const imageNames = [
-  "001.png",
-  "002.png",
-  "003.png",
-  "004.png",
-  "005.png",
-  "006.png",
-  "007.png",
-  "008.png",
-  "009.png",
-  "010.png",
-  "011.png",
-  "012.png",
-  "013.png",
-  "014.png",
-  "015.png",
-  "016.png",
-  "017.png",
-  "018.png",
-  "019.png",
-  "020.png",
-  "021.png",
-  "022.png",
-  "023.png",
-  "024.png",
-  "025.png",
-  "026.png",
-  "027.png",
-];
 
 const currentState = {
   wsRefs: [],
@@ -96,22 +65,42 @@ Bun.serve({
       },
     },
 
-    // Image handling
-    "/photo/current.png": {
+    "/images/*": {
       GET: async (req) => {
-        const filePath =
-          IMAGE_FOLDER_PATH +
-          imageNames[currentState.currentImageNumber % imageNames.length];
-
+        const filePath = "./" + new URL(req.url).pathname;
         const file = Bun.file(filePath);
         return new Response(file);
       },
     },
+
+    // Image handling
+    "/photo/current": {
+      GET: async (req) => {
+        const result = getImage({ id: currentState.currentImageNumber });
+        return new createResponse(result);
+      },
+    },
     "/photo/next": {
       POST: async (req) => {
+        const imageCount = getImageCount();
+
+        if (imageCount < 1) {
+          return createResponse({
+            status: "error",
+            message: "No images to show",
+          });
+        }
+
         currentState.currentImageNumber += 1;
+        currentState.currentImageNumber =
+          currentState.currentImageNumber % imageCount;
 
         return createResponse({ status: "ok" });
+      },
+    },
+    "/photo/response/create": {
+      POST: async (req) => {
+        const body = await req.json();
       },
     },
   },
