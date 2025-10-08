@@ -100,10 +100,18 @@ Bun.serve({
     "/photo/current.png": {
       GET: async (req) => {
         const filePath =
-          IMAGE_FOLDER_PATH + imageNames[currentState.currentImageNumber];
+          IMAGE_FOLDER_PATH +
+          imageNames[currentState.currentImageNumber % imageNames.length];
 
         const file = Bun.file(filePath);
         return new Response(file);
+      },
+    },
+    "/photo/next": {
+      POST: async (req) => {
+        currentState.currentImageNumber += 1;
+
+        return createResponse({ status: "ok" });
       },
     },
   },
