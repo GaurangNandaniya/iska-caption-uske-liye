@@ -53,6 +53,15 @@ export function createImageResponse({ username, caption, imageId }) {
   });
 }
 
+export function getImageResponses({ id }) {
+  using db = getDB();
+  using query = db.query(
+    `select * from image_response as ir where ir.id = $id;`,
+  );
+
+  return query.all({ $id: id });
+}
+
 export function getAllImageResponses() {
   using db = getDB();
   using query = db.query(`select * from image_response;`);

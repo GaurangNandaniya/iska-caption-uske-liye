@@ -5,6 +5,7 @@ import {
   getImageCount,
   createImageResponse,
   getAllImageResponses,
+  getImageResponses,
 } from "./model.ts";
 
 type WebSocketData = {
@@ -15,12 +16,6 @@ const currentState = {
   wsRefs: [],
   mode: "ASK",
   currentImageNumber: 0,
-};
-
-const getHandlers = {
-  "/mode/get": (req) => {
-    return Response("hello");
-  },
 };
 
 const CORS_HEADERS = {
@@ -39,6 +34,24 @@ function createResponse(body, contentType) {
   });
 }
 
+function sendModeUpdateSignal() {
+  currentState.wsRefs.forEach((ws) => {
+    ws.send(JSON.stringify({ type: "MODE_UPDATE", value: body.mode }));
+  });
+}
+
+function sendRefetchSignal() {
+  currentState.wsRefs.forEach((ws) => {
+    ws.send(JSON.stringify({ type: "REFETCH" }));
+  });
+}
+
+function sendNextResponseSignal() {
+  currentState.wsRefs.forEach((ws) => {
+    ws.send(JSON.stringify({ type: "NEXT_RESPONSE" }));
+  });
+}
+
 Bun.serve({
   port: 3001,
   hostname: "0.0.0.0",
@@ -53,9 +66,9 @@ Bun.serve({
       POST: async (req) => {
         const body = await req.json();
 
-        currentState.wsRefs.forEach((ws) => {
-          ws.send(JSON.stringify({ type: "MODE_UPDATE", value: body.mode }));
-        });
+        // Send signals
+        sendModeUpdateSignal();
+        sendRefetchSignal();
 
         currentState.mode = body.mode;
 
@@ -67,7 +80,10 @@ Bun.serve({
     "/user/create": {
       POST: async (req) => {
         const body = await req.json();
-        return createResponse(await createUser(body));
+        const result = await createUser(body);
+
+        sendRefetchSignal();
+        return createResponse(result);
       },
     },
 
@@ -86,6 +102,23 @@ Bun.serve({
         return new createResponse(result);
       },
     },
+    "/photo/:id": {
+      GET: async (req) => {
+        const result = getImage({ id: req.params.id });
+
+        const filePath = "./" + result.image_path;
+        const file = Bun.file(filePath);
+
+        return new Response(file);
+      },
+    },
+    "/photo/:id/responses": {
+      GET: async (req) => {
+        const result = getImageResponses({ id: req.params.id });
+
+        return new createResponse(result);
+      },
+    },
     "/photo/next": {
       POST: async (req) => {
         const imageCount = getImageCount();
@@ -101,6 +134,7 @@ Bun.serve({
         currentState.currentImageNumber =
           currentState.currentImageNumber % imageCount;
 
+        sendRefetchSignal();
         return createResponse({ status: "ok" });
       },
     },
@@ -111,10 +145,12 @@ Bun.serve({
         const body = await req.json();
         const result = createImageResponse(body);
 
+        sendRefetchSignal();
         return createResponse(result);
       },
     },
 
+    // Get all responses
     "/responses": {
       GET: async (req) => {
         const result = getAllImageResponses();
@@ -151,7 +187,6 @@ Bun.serve({
     }
 
     if (url.pathname === "/ws") {
-      // 2. We have the 'server' object here, so we can call upgrade
       const success = server.upgrade(req);
 
       if (success) {
