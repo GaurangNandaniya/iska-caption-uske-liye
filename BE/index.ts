@@ -1,4 +1,3 @@
-import type { ServerWebSocket } from "bun";
 import {
   createUser,
   getImage,
@@ -8,11 +7,11 @@ import {
   getImageResponses,
 } from "./model.ts";
 
-type WebSocketData = {
-  id: string;
-};
-
-const currentState = {
+const currentState: {
+  mode: "ASK" | "REVEAL";
+  wsRefs: any[];
+  currentImageNumber: number;
+} = {
   wsRefs: [],
   mode: "ASK",
   currentImageNumber: 0,
@@ -25,7 +24,7 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400",
 };
 
-function createResponse(body, contentType) {
+function createJsonResponse(body: any) {
   return new Response(JSON.stringify(body), {
     headers: {
       "content-type": "application/json",
@@ -34,21 +33,21 @@ function createResponse(body, contentType) {
   });
 }
 
-function sendModeUpdateSignal() {
-  currentState.wsRefs.forEach((ws) => {
+function sendModeUpdateSignal(body: any) {
+  currentState.wsRefs.forEach((ws: any) => {
     ws.send(JSON.stringify({ type: "MODE_UPDATE", value: body.mode }));
   });
 }
 
 function sendRefetchSignal() {
-  currentState.wsRefs.forEach((ws) => {
+  currentState.wsRefs.forEach((ws: any) => {
     ws.send(JSON.stringify({ type: "REFETCH" }));
   });
 }
 
-function sendNextResponseSignal() {
-  currentState.wsRefs.forEach((ws) => {
-    ws.send(JSON.stringify({ type: "NEXT_RESPONSE" }));
+function sendNextResponseSignal(body: any) {
+  currentState.wsRefs.forEach((ws: any) => {
+    ws.send(JSON.stringify({ type: "NEXT_RESPONSE", value: body }));
   });
 }
 
@@ -63,32 +62,32 @@ Bun.serve({
       },
     },
     "/mode/update": {
-      POST: async (req) => {
+      POST: async (req: any) => {
         const body = await req.json();
 
         // Send signals
-        sendModeUpdateSignal();
+        sendModeUpdateSignal(body);
         sendRefetchSignal();
 
         currentState.mode = body.mode;
 
-        return new createResponse(body);
+        return createJsonResponse(body);
       },
     },
 
     // User handling
     "/user/create": {
-      POST: async (req) => {
+      POST: async (req: any) => {
         const body = await req.json();
         const result = await createUser(body);
 
         sendRefetchSignal();
-        return createResponse(result);
+        return createJsonResponse(result);
       },
     },
 
     "/images/*": {
-      GET: async (req) => {
+      GET: async (req: any) => {
         const filePath = "./" + new URL(req.url).pathname;
         const file = Bun.file(filePath);
         return new Response(file);
@@ -97,13 +96,13 @@ Bun.serve({
 
     // Image handling
     "/photo/current": {
-      GET: async (req) => {
+      GET: async () => {
         const result = getImage({ id: currentState.currentImageNumber });
-        return new createResponse(result);
+        return createJsonResponse(result);
       },
     },
     "/photo/:id": {
-      GET: async (req) => {
+      GET: async (req: any) => {
         const result = getImage({ id: req.params.id });
 
         const filePath = "./" + result.image_path;
@@ -113,18 +112,18 @@ Bun.serve({
       },
     },
     "/photo/:id/responses": {
-      GET: async (req) => {
+      GET: async (req: any) => {
         const result = getImageResponses({ id: req.params.id });
 
-        return new createResponse(result);
+        return createJsonResponse(result);
       },
     },
     "/photo/next": {
-      POST: async (req) => {
+      POST: async () => {
         const imageCount = getImageCount();
 
         if (imageCount < 1) {
-          return createResponse({
+          return createJsonResponse({
             status: "error",
             message: "No images to show",
           });
@@ -135,51 +134,62 @@ Bun.serve({
           currentState.currentImageNumber % imageCount;
 
         sendRefetchSignal();
-        return createResponse({ status: "ok" });
+        return createJsonResponse({ status: "ok" });
       },
     },
 
     // Response handling
     "/photo/response/create": {
-      POST: async (req) => {
+      POST: async (req: any) => {
         const body = await req.json();
         const result = createImageResponse(body);
 
         sendRefetchSignal();
-        return createResponse(result);
+        return createJsonResponse(result);
       },
     },
 
     // Get all responses
     "/responses": {
-      GET: async (req) => {
+      GET: async () => {
         const result = getAllImageResponses();
 
-        return createResponse(result);
+        return createJsonResponse(result);
+      },
+    },
+
+    "/response/next": {
+      POST: async (req: any) => {
+        const body = await req.json();
+
+        sendNextResponseSignal(body);
+        sendRefetchSignal();
+
+        return createJsonResponse({ status: "ok" });
       },
     },
   },
 
   websocket: {
     // Fired when the connection is successfully opened
-    open(ws: ServerWebSocket<WebSocketData>) {
+    open(ws: any) {
       currentState.wsRefs.push(ws);
       console.log("Connected!");
       ws.send(JSON.stringify({ status: "connected" }));
     },
 
-    message(ws: ServerWebSocket<WebSocketData>, message: string | Buffer) {
+    message(ws: any, message: string) {
       console.log(`[WS] Received: ${message}`);
       ws.send(JSON.stringify({ type: "REFETCH" }));
     },
 
     // Fired when the connection closes
-    close(ws: ServerWebSocket<WebSocketData>, code: number, reason: string) {
-      console.log(`[WS] Client disconnected.`);
+    close(_ws: any, _code: number, reason: string) {
+      console.log(`[WS] Client disconnected. Reason: ${reason}`);
     },
   },
 
-  fetch(req, server) {
+  fetch(req: any, server: any) {
     const url = new URL(req.url);
 
     if (req.method === "OPTIONS") {
@@ -196,6 +206,6 @@ Bun.serve({
       return new Response("Upgrade failed", { status: 400 });
     }
 
-    return new Response("Invalid request");
+    return new Response("Hello, this is unhandled request.");
   },
 });
