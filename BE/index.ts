@@ -1,10 +1,15 @@
+import type { ServerWebSocket } from "bun";
+
+type WebSocketData = {
+  id: string;
+};
+
 Bun.serve({
+  hostname: "0.0.0.0",
+
   port: 3001,
   // `routes` requires Bun v1.2.3+
   routes: {
-    // Websocket
-    "/ws": new Response("OK"),
-
     // Dynamic routes
     "/viewer": (req) => {
       // return static html
@@ -46,15 +51,38 @@ Bun.serve({
   },
 
   websocket: {
-    message(ws) {
-      // Publish to all "chat" subscribers
-      server.publish("chat", "Hello everyone!");
+    // Fired when the connection is successfully opened
+    open(ws: ServerWebSocket<WebSocketData>) {
+      console.log("Connected!");
+      ws.send(JSON.stringify({ status: "connected" }));
+    },
+
+    message(ws: ServerWebSocket<WebSocketData>, message: string | Buffer) {
+      console.log(`[WS] Received: ${message}`);
+      ws.send(JSON.stringify({ message }));
+    },
+
+    // Fired when the connection closes
+    close(ws: ServerWebSocket<WebSocketData>, code: number, reason: string) {
+      console.log(`[WS] Client disconnected.`);
     },
   },
 
-  // (optional) fallback for unmatched routes:
-  // Required if Bun's version < 1.2.3
-  fetch(req) {
-    return new Response("Not Found", { status: 404 });
+  fetch(req, server) {
+    const url = new URL(req.url);
+
+    if (url.pathname === "/ws") {
+      // 2. We have the 'server' object here, so we can call upgrade
+      const success = server.upgrade(req);
+
+      if (success) {
+        return undefined; // Handshake successful! Hand off to 'websocket' handlers.
+      }
+
+      return new Response("Upgrade failed", { status: 400 });
+    }
+
+    // Fallback for non-websocket traffic
+    return new Response("Not a websocket request.");
   },
 });
