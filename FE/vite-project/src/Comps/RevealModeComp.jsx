@@ -2,26 +2,25 @@ import { useState } from "react";
 import { API_URL } from "../constants";
 
 const RevealModeComp = (props) => {
-  const { isSocketConnected, customRef, revealedResponsesIds, isAdmin } = props;
+  const { customRef, revealedResponsesIds, isAdmin } = props;
   const [currentPhoto, setCurrentPhoto] = useState(null);
   const [allResponses, setAllResponses] = useState([
-    { id: 1, responseText: "Test response", username: "Test user" },
+    // { id: 1, caption: "Caption 1", created_by_username: "User1" },
   ]);
 
   const getAllResponses = async (imgId) => {
     const response = await fetch(`${API_URL}/photo/${imgId}/responses`);
     const data = await response.json();
+
     setAllResponses(data);
   };
 
   const getCurrentPhoto = async () => {
-    if (isSocketConnected) {
-      const response = await fetch(`${API_URL}/photo/current`);
-      const data = await response.json();
-      setCurrentPhoto(data);
-      if (data?.id != null && data?.id != undefined) getAllResponses(data?.id);
-      return data;
-    }
+    const response = await fetch(`${API_URL}/photo/current`);
+    const data = await response.json();
+    setCurrentPhoto(data);
+    if (data?.id != null && data?.id != undefined) getAllResponses(data?.id);
+    return data;
   };
   customRef.current = {
     getCurrentPhoto: getCurrentPhoto,
@@ -52,7 +51,6 @@ const RevealModeComp = (props) => {
             margin: "0 auto 20px",
           }}
           src={`${API_URL}/${currentPhoto?.image_path}`}
-          //   src={`http://10.107.89.79:3001/${currentPhoto?.image_path}`}
           alt="current"
         />
       ) : null}

@@ -7,7 +7,6 @@ import RevealModeComp from "./Comps/RevealModeComp.jsx";
 function App() {
   const [name, setName] = useState("");
   const [mode, setMode] = useState("ASK");
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [revealedResponsesIds, setRevealedResponsesIds] = useState([]);
   const [userInfo, setUserInfo] = useState(() => {
     const userInfoFromStorage = localStorage.getItem("userInfo");
@@ -16,13 +15,14 @@ function App() {
   const webSocketRef = useRef(null);
   const askModeRef = useRef(null);
   const revealModeRef = useRef(null);
+  const modeRef = useRef("ASK");
 
   useEffect(() => {
     const ws = new WebSocket(WEB_SOCKET_URL);
     ws.onopen = () => {
       console.log("WebSocket connection established");
-      setIsSocketConnected(true);
-      ws.send("Hi from client");
+      if (modeRef.current == "ASK") askModeRef.current?.getCurrentPhoto();
+      if (modeRef.current == "REVEAL") revealModeRef.current?.getCurrentPhoto();
     };
 
     ws.onmessage = (event) => {
@@ -30,8 +30,9 @@ function App() {
       console.log("Message from server socket ", message);
 
       if (message.type === "REFETCH") {
-        if (mode == "ASK") askModeRef.current.getCurrentPhoto();
-        if (mode == "REVEAL") revealModeRef.current.getCurrentPhoto();
+        if (modeRef.current == "ASK") askModeRef.current?.getCurrentPhoto();
+        if (modeRef.current == "REVEAL")
+          revealModeRef.current?.getCurrentPhoto();
       }
 
       // if (message.type === "NEXT_RESPONSE") {
@@ -40,6 +41,7 @@ function App() {
 
       if (message.type === "MODE_UPDATE") {
         setMode(message.value);
+        modeRef.current = message.value;
       }
       if (message.type === "NEXT_RESPONSE") {
         setRevealedResponsesIds((prev) => [...prev, message?.value.responseId]);
@@ -48,12 +50,10 @@ function App() {
 
     ws.onclose = () => {
       console.log("WebSocket connection closed");
-      setIsSocketConnected(false);
     };
 
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
-      setIsSocketConnected(false);
     };
 
     webSocketRef.current = ws;
@@ -69,6 +69,7 @@ function App() {
       const response = await fetch(`${API_URL}/mode/get`);
       const data = await response.json();
       setMode(data.mode);
+      modeRef.current = data.mode;
     };
     fetchMode();
   }, []);
@@ -153,13 +154,11 @@ function App() {
           customRef={askModeRef}
           userInfo={userInfo}
           isAdmin={isAdmin}
-          isSocketConnected={isSocketConnected}
         />
       ) : null}
       {mode == "REVEAL" ? (
         <RevealModeComp
           customRef={revealModeRef}
-          isSocketConnected={isSocketConnected}
           revealedResponsesIds={revealedResponsesIds}
           isAdmin={isAdmin}
         />

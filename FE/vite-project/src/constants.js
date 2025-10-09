@@ -1,2 +1,3 @@
-export const API_URL = "https://tee-out-tones-ambient.trycloudflare.com";
-export const WEB_SOCKET_URL = "ws://tee-out-tones-ambient.trycloudflare.com/ws";
+export const API_URL = "https://guy-ambient-blacks-sim.trycloudflare.com";
+export const WEB_SOCKET_URL =
+  "ws://guy-ambient-blacks-sim.trycloudflare.com/ws";

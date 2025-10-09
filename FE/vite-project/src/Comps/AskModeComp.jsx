@@ -2,7 +2,7 @@ import { useState } from "react";
 import { API_URL } from "../constants";
 
 const AskModeComp = (props) => {
-  const { userInfo, isSocketConnected, isAdmin, customRef } = props;
+  const { userInfo, isAdmin, customRef } = props;
 
   const [currentPhoto, setCurrentPhoto] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -11,20 +11,17 @@ const AskModeComp = (props) => {
   const getAllResponses = async (imgId) => {
     const response = await fetch(`${API_URL}/photo/${imgId}/responses`);
     const data = await response.json();
+    console.log({ allResponses: data });
     setResponsesCount(data.length);
-    // setCurrentPhoto(data);
   };
 
   const getCurrentPhoto = async () => {
-    if (isSocketConnected) {
-      const response = await fetch(`${API_URL}/photo/current`);
+    const response = await fetch(`${API_URL}/photo/current`);
+    const data = await response.json();
+    setCurrentPhoto(data);
 
-      const data = await response.json();
-      setCurrentPhoto(data);
-
-      if (data?.id != null && data?.id != undefined) getAllResponses(data?.id);
-      return data;
-    }
+    if (data?.id != null && data?.id != undefined) getAllResponses(data?.id);
+    return data;
   };
   customRef.current = {
     getCurrentPhoto: getCurrentPhoto,
@@ -42,8 +39,6 @@ const AskModeComp = (props) => {
         imageId: currentPhoto?.id,
       }),
     });
-    // const data = await response.json();
-    // setCurrentPhoto(data);
     setResponseText("");
   };
 

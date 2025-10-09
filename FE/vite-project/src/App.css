@@ -55,7 +55,51 @@
   column-gap: 8px;
 }
 
+@keyframes diagonal-impact-slam {
+  0% {
+    transform: translate(350px, -350px) rotate(55deg) scale(1.1);
+    opacity: 0.7;
+  }
+
+  /* Entry slam (main impact) */
+  40% {
+    transform: translate(250px, 0) rotate(5deg) scaleX(1.1) scaleY(0.8);
+    opacity: 1;
+  }
+
+  /* 1st bounce - strongest rebound */
+  55% {
+    transform: translate(120px, -70px) rotate(-18deg) scaleX(0.9) scaleY(1.1);
+  }
+  65% {
+    transform: translate(90px, 0) rotate(10deg) scaleX(1.05) scaleY(0.95);
+  }
+
+  /* 2nd bounce - smaller */
+  75% {
+    transform: translate(40px, -35px) rotate(-8deg) scaleX(0.95) scaleY(1.05);
+  }
+  85% {
+    transform: translate(25px, 0) rotate(4deg) scaleX(1.03) scaleY(0.97);
+  }
+
+  /* 3rd bounce - subtle wobble */
+  92% {
+    transform: translate(10px, -10px) rotate(-3deg) scaleX(0.97) scaleY(1.03);
+  }
+
+  /* Final settle */
+  97% {
+    transform: translate(2px, 0) rotate(1deg) scaleX(1.02) scaleY(0.98);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
 /* Animation of revealed responses */
 .revealed {
-  transition: all 5s ease-in-out;
+  animation: diagonal-impact-slam 2s cubic-bezier(0.3, 0.9, 0.4, 1.4);
+  color: grey;
 }
