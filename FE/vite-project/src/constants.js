@@ -1,3 +1,3 @@
-export const API_URL = "https://guy-ambient-blacks-sim.trycloudflare.com";
+export const API_URL = "https://papers-static-sing-focusing.trycloudflare.com";
 export const WEB_SOCKET_URL =
-  "ws://guy-ambient-blacks-sim.trycloudflare.com/ws";
+  "ws://papers-static-sing-focusing.trycloudflare.com/ws";

@@ -70,7 +70,7 @@ const AskModeComp = (props) => {
             setResponseText(e.target.value);
             if (isAdmin) console.log(e.target.value);
           }}
-          type={isAdmin ? "password" : "text"}
+          type={"text"}
         />
         <button onClick={createResponse}>Submit</button>
       </div>

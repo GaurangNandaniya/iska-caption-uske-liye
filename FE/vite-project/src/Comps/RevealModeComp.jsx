@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_URL } from "../constants";
+import Timer from "./Timer";
 
 const RevealModeComp = (props) => {
   const { customRef, revealedResponsesIds, isAdmin } = props;
@@ -75,6 +76,13 @@ const RevealModeComp = (props) => {
                 Reveal
               </button>
             ) : null}
+            <Timer
+              isAdmin={isAdmin}
+              duration={15}
+              onComplete={() => {
+                revealName({ responseId: response.id });
+              }}
+            />
           </div>
         ))}
       </div>
