@@ -47,11 +47,9 @@ const AskModeComp = (props) => {
       {currentPhoto?.image_path ? (
         <img
           style={{
-            width: "300px",
-            //   height: "300px",
+            width: "100%",
+            maxWidth: "500px",
             objectFit: "contain",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
             margin: "0 auto 20px",
           }}
           src={`${API_URL}/${currentPhoto?.image_path}`}

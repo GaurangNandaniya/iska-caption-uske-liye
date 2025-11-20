@@ -3,16 +3,22 @@ import { useState, useRef, useEffect } from "react";
 const Timer = ({ duration = 10, onComplete, isAdmin }) => {
   const [seconds, setSeconds] = useState(0);
   const intervalRef = useRef(null);
+  
+  // Calculate circle properties
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (seconds / duration) * circumference;
+  const dashoffset = circumference - progress;
 
   const startTimer = () => {
-    if (intervalRef.current) return; // prevent multiple intervals
+    if (intervalRef.current) return;
     setSeconds(0);
     intervalRef.current = setInterval(() => {
       setSeconds((prev) => {
         if (prev + 1 >= duration) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
-          if (onComplete) onComplete(); // 🔔 callback when done
+          if (onComplete) onComplete();
           return duration;
         }
         return prev + 1;
@@ -21,39 +27,33 @@ const Timer = ({ duration = 10, onComplete, isAdmin }) => {
   };
 
   useEffect(() => {
-    return () => clearInterval(intervalRef.current); // cleanup on unmount
+    return () => clearInterval(intervalRef.current);
   }, []);
 
   return (
-    <div style={styles.container}>
-      <span style={styles.timer}>{seconds}s</span>
-      {isAdmin && <button onClick={startTimer}>Start</button>}
+    <div className="timer-container">
+      <div className="timer-circle-wrapper">
+        <svg className="timer-svg" width="50" height="50" viewBox="0 0 50 50">
+          <circle
+            className="timer-bg-ring"
+            cx="25"
+            cy="25"
+            r={radius}
+          />
+          <circle
+            className="timer-progress-ring"
+            cx="25"
+            cy="25"
+            r={radius}
+            strokeDasharray={circumference}
+            strokeDashoffset={-dashoffset}
+          />
+        </svg>
+        <span className="timer-text-centered">{duration - seconds}</span>
+      </div>
+      {isAdmin && <button className="timer-start-btn" onClick={startTimer}>Start</button>}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    alignItems: "center",
-    columnGap: "16px",
-    fontFamily: "Poppins, sans-serif",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "4px",
-  },
-  timer: {
-    fontSize: "1rem",
-  },
-  button: {
-    padding: "8px 16px",
-    fontSize: "1rem",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#007bff",
-    color: "white",
-    cursor: "pointer",
-  },
 };
 
 export default Timer;

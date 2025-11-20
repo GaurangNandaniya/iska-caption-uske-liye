@@ -6,7 +6,7 @@ const RevealModeComp = (props) => {
   const { customRef, revealedResponsesIds, isAdmin } = props;
   const [currentPhoto, setCurrentPhoto] = useState(null);
   const [allResponses, setAllResponses] = useState([
-    // { id: 1, caption: "Caption 1", created_by_username: "User1" },
+    { id: 1, caption: "Caption 1", created_by_username: "User1" },
   ]);
 
   const getAllResponses = async (imgId) => {
@@ -40,15 +40,13 @@ const RevealModeComp = (props) => {
   };
 
   return (
-    <div className="ask-mode-container">
+    <div className="reveal-mode-container">
       {currentPhoto?.image_path ? (
         <img
           style={{
-            width: "300px",
-            //   height: "300px",
+            width: "100%",
+            maxWidth: "500px",
             objectFit: "contain",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
             margin: "0 auto 20px",
           }}
           src={`${API_URL}/${currentPhoto?.image_path}`}
@@ -59,30 +57,31 @@ const RevealModeComp = (props) => {
       <div className="responses-list-container">
         {allResponses.map((response) => (
           <div className="response-item" key={response.id}>
-            {response.caption}{" "}
-            {revealedResponsesIds.includes(response.id) ? (
-              <span className="revealed">({response.created_by_username})</span>
-            ) : (
-              ""
-            )}
-            {isAdmin ? (
-              <button
-                onClick={() => {
-                  revealName({
-                    responseId: response.id,
-                  });
+            <span>{response.caption}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {revealedResponsesIds.includes(response.id) ? (
+                <span className="revealed-text">({response.created_by_username})</span>
+              ) : null}
+              
+              {isAdmin ? (
+                <button
+                  onClick={() => {
+                    revealName({
+                      responseId: response.id,
+                    });
+                  }}
+                >
+                  Reveal
+                </button>
+              ) : null}
+              <Timer
+                isAdmin={isAdmin}
+                duration={15}
+                onComplete={() => {
+                  revealName({ responseId: response.id });
                 }}
-              >
-                Reveal
-              </button>
-            ) : null}
-            <Timer
-              isAdmin={isAdmin}
-              duration={15}
-              onComplete={() => {
-                revealName({ responseId: response.id });
-              }}
-            />
+              />
+            </div>
           </div>
         ))}
       </div>
