@@ -3,6 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start": "bun run index.ts",
+    "db:reset": "rm data/db.sqlite",
+    "db:migrate": "bun run migrate.js",
+    "db:repl": "bun run sqlite.js"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
